@@ -140,7 +140,7 @@ float AutoWall::SimulateFireBullet(Vector StartPos, Vector Point, int* HitGroup)
 					if (AutoWall::HandleBulletPenetration(WpnData->m_flPenetration, EnterSurfaceData, ExitSurfaceData, Result, Thickness, PenetrationCount, Damage)) { break; }
 				}
 				else { break; }
-				StartPos = Result.startpos;
+				StartPos = Result.endpos;
 			}
 		}
 	}

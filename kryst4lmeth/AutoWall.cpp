@@ -10,22 +10,24 @@ float AutoWall::GetHitgroupDamage(int iHitGroup)
 	switch (iHitGroup)
 	{
 	case HITGROUP_HEAD: return 4.0f;
-	case HITGROUP_STOMACH: return 1.5f;
+	case HITGROUP_STOMACH: return 1.25f;
 	case HITGROUP_LEFTLEG:
 	case HITGROUP_RIGHTLEG: return 0.75f;
 	}
 	return 1.0f;
 }
 
-float AutoWall::ScaleDamage(int Hitgroup, C_CSPlayer *pEntity, float weapon_armor_ratio, float current_damage)
+float AutoWall::ScaleDamage(int Hitgroup, C_CSPlayer *pEntity, float WeaponArmorRatio, float Damage)
 {
-	current_damage *= AutoWall::GetHitgroupDamage(Hitgroup);
-	if (pEntity->GetArmor())
+	float Armor = pEntity->GetArmor();
+	Damage *= AutoWall::GetHitgroupDamage(Hitgroup);
+	if (Armor > 0.0f && !(Hitgroup == HITGROUP_HEAD && !pEntity->HasHelmet()))
 	{
-		if (Hitgroup == HITGROUP_HEAD) { if (pEntity->HasHelmet()) { current_damage *= weapon_armor_ratio; } }
-		else { current_damage *= weapon_armor_ratio; }
+		float ScaledDamage = WeaponArmorRatio * 0.5f * Damage;
+		if ((Damage - ScaledDamage) * 0.5f > Armor) { ScaledDamage = Damage - Armor * 2.0f; }
+		Damage = ScaledDamage;
 	}
-	return current_damage;
+	return Damage;
 }
 
 bool AutoWall::HandleBulletPenetration(float WeaponPenetration, surfacedata_t* EnterSurfaceData, surfacedata_t* ExitSurfaceData, trace_t& Trace, float Thickness, int &HitsLeft, float& CurrentDamage)
@@ -46,10 +48,9 @@ bool AutoWall::HandleBulletPenetration(float WeaponPenetration, surfacedata_t* E
 	else
 	{
 		v49 = min(EnterSurfaceData->game.flPenetrationModifier, SurfacePenetrationModifier);
-		v50 = 1.0f - min(EnterSurfaceData->game.flDamageModifier, SurfaceDamageModifier);
+		v50 = min(EnterSurfaceData->game.flDamageModifier, SurfaceDamageModifier);
 	}
 	if (EnterMaterial == ExitMaterial && (ExitMaterial == 87 || ExitMaterial == 77)) { v49 *= 2.0f; }
-	if (Thickness > v49 * WeaponPenetration * 64) { return true; }
 	CurrentDamage *= v50;
 
 	float v72 = 0.16f;
@@ -73,7 +74,7 @@ bool AutoWall::HandleBulletPenetration(float WeaponPenetration, surfacedata_t* E
 	}
 	float v39 = max(1.0f / v37, 0.0f);
 	float v43 = max((3.0f / WeaponPenetration) * 1.25f, 0.0f);
-	float DamageLost = (v39 * 3.0f) * v43 + CurrentDamage * v72 + (pow(Thickness, 2) * v39 / 24.0f) / 2.0f;
+	float DamageLost = (v39 * 3.0f) * v43 + CurrentDamage * v72 + (pow(Thickness, 2) * v39 / 24.0f);
 
 	if (CurrentDamage - max(DamageLost, 0.0f) < 0.0f) { return true; }
 	CurrentDamage -= max(DamageLost, 0.0f);

@@ -23,10 +23,8 @@ namespace SourceEngine
 
 	struct surfacesoundnames_t
 	{
-		unsigned short	walkStepLeft;
-		unsigned short	walkStepRight;
-		unsigned short	runStepLeft;
-		unsigned short	runStepRight;
+		unsigned short	stepLeft;
+		unsigned short	stepRight;
 		unsigned short	impactSoft;
 		unsigned short	impactHard;
 		unsigned short	scrapeSmooth;

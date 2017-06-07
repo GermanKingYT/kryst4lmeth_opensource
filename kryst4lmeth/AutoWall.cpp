@@ -107,11 +107,12 @@ float AutoWall::SimulateFireBullet(Vector StartPos, Vector Point, int* HitGroup)
 	while (PenetrationCount && Config.g_iAutoWall_MinDamage > 0)
 	{
 		RemainingLength = WpnData->m_flRange - CurrentLength;
-		Vector Dest = StartPos + Direction * 64.f;
+		Vector Dest = StartPos + Direction * RemainingLength;
 
-		Ray.Init(StartPos, Dest + Direction * RemainingLength);
+		Ray.Init(StartPos, Dest);
 		Interfaces::EngineTrace()->TraceRay(Ray, 0x4600400B, &TraceFilter, &EnterTrace);
 		if (EnterTrace.fraction == 1.0f) { break; }
+		CurrentLength += EnterTrace.fraction * RemainingLength;
 
 		if (CurrentLength < WpnData->m_flRange)
 		{
@@ -131,11 +132,11 @@ float AutoWall::SimulateFireBullet(Vector StartPos, Vector Point, int* HitGroup)
 				Vector Dummy;
 				if (!Utils::TraceToExit(Dummy, EnterTrace, EnterTrace.endpos, Direction, &Result)) { break; }
 				Damage *= pow(WpnData->m_flRangeModifier, CurrentLength * 0.002);
-				if (Result.endpos.IsValid() && EnterTrace.endpos.IsValid())
+				if (Result.startpos.IsValid() && EnterTrace.endpos.IsValid())
 				{
 					surfacedata_t* EnterSurfaceData = Interfaces::PhysProps()->GetSurfaceData(EnterTrace.surface.surfaceProps);
 					surfacedata_t* ExitSurfaceData = Interfaces::PhysProps()->GetSurfaceData(Result.surface.surfaceProps);
-					float Thickness = (EnterTrace.endpos - Result.endpos).Length();
+					float Thickness = (EnterTrace.endpos - Result.startpos).Length();
 					if (AutoWall::HandleBulletPenetration(WpnData->m_flPenetration, EnterSurfaceData, ExitSurfaceData, Result, Thickness, PenetrationCount, Damage)) { break; }
 				}
 				else { break; }
